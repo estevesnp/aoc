@@ -10,6 +10,12 @@ const Play = struct {
     blue: usize = 0,
 };
 
+const Colors = enum {
+    red,
+    green,
+    blue,
+};
+
 pub fn main() !void {
     const file = try std.fs.cwd().openFile("../../input.txt", .{});
     defer file.close();
@@ -54,15 +60,14 @@ fn parsePlay(line: []const u8) Play {
         const num = std.fmt.parseInt(usize, num_str, 10) catch |err|
             std.debug.panic("error parsing num: {any}", .{err});
 
-        const color = vals_iter.next() orelse @panic("no color found");
+        const color = vals_iter.next() orelse @panic("no color string found");
+        const color_enum = std.meta.stringToEnum(Colors, color) orelse @panic("no expected color found");
 
-        if (std.mem.eql(u8, "red", color)) {
-            play.red = num;
-        } else if (std.mem.eql(u8, "green", color)) {
-            play.green = num;
-        } else if (std.mem.eql(u8, "blue", color)) {
-            play.blue = num;
-        } else std.debug.panic("error parsing color: {s}", .{color});
+        switch (color_enum) {
+            .red => play.red = num,
+            .green => play.green = num,
+            .blue => play.blue = num,
+        }
     }
 
     return play;
