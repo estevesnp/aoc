@@ -38,7 +38,7 @@ fn getNums(line: []u8) u8 {
 }
 
 fn convertChar(char: u8) ?u8 {
-    if (char >= '0' and char <= '9') {
+    if (std.ascii.isDigit(char)) {
         return char - '0';
     }
     return null;
