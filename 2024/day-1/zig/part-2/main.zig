@@ -4,7 +4,8 @@ pub fn main() !void {
     const file = try std.fs.cwd().openFile("../../input.txt", .{});
     defer file.close();
 
-    const reader = file.reader();
+    var buf_reader = std.io.bufferedReader(file.reader());
+    const reader = buf_reader.reader();
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
