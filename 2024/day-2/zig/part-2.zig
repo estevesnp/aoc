@@ -22,13 +22,25 @@ pub fn main() !void {
             try nums.append(num);
         }
 
-        if (isSafeReport(nums.items, null)) count += 1;
+        if (isSafeReport(nums.items)) count += 1;
     }
 
     std.debug.print("RESULT: {}\n", .{count});
 }
 
-fn isSafeReport(report: []u32, skip_idx: ?usize) bool {
+fn isSafeReport(report: []u32) bool {
+    if (report.len < 2) return true;
+
+    if (isSafeSequence(report, null)) return true;
+
+    for (0..report.len) |idx| {
+        if (isSafeSequence(report, idx)) return true;
+    }
+
+    return false;
+}
+
+fn isSafeSequence(report: []u32, skip_idx: ?usize) bool {
     var cur_num: ?u32 = null;
     var cur_order: ?math.Order = null;
 
@@ -40,11 +52,7 @@ fn isSafeReport(report: []u32, skip_idx: ?usize) bool {
 
         const diff = @abs(@as(i32, @intCast(cur_num.?)) - @as(i32, @intCast(num)));
 
-        if (diff == 0 or diff > 3) {
-            if (skip_idx == null) return isSafeReport(report, 0);
-            if (skip_idx.? < report.len - 1) return isSafeReport(report, skip_idx.? + 1);
-            return false;
-        }
+        if (diff == 0 or diff > 3) return false;
 
         const order = math.order(cur_num.?, num);
         if (cur_order == null) {
@@ -52,11 +60,7 @@ fn isSafeReport(report: []u32, skip_idx: ?usize) bool {
             continue;
         }
 
-        if (cur_order.? != order) {
-            if (skip_idx == null) return isSafeReport(report, 0);
-            if (skip_idx.? < report.len - 1) return isSafeReport(report, skip_idx.? + 1);
-            return false;
-        }
+        if (cur_order.? != order) return false;
     }
 
     return true;
