@@ -1,11 +1,7 @@
 const std = @import("std");
 
 pub fn main() !void {
-    const file = try std.fs.cwd().openFile("../../input.txt", .{});
-    defer file.close();
-
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const reader = buf_reader.reader();
+    const file = @embedFile("input.txt");
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.detectLeaks();
@@ -14,10 +10,11 @@ pub fn main() !void {
     var num_map = try initMap(allocator);
     defer num_map.deinit();
 
-    var buff: [1024]u8 = undefined;
     var count: u64 = 0;
 
-    while (try reader.readUntilDelimiterOrEof(&buff, '\n')) |line| {
+    var iter = std.mem.tokenizeAny(u8, file, "\n");
+
+    while (iter.next()) |line| {
         count += try getNums(allocator, &num_map, line);
     }
 

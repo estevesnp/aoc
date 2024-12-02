@@ -14,8 +14,7 @@ const Point = struct {
 const NumPoint = struct { val: u32, point: Point };
 
 pub fn main() !void {
-    const file = try std.fs.cwd().openFile("../../input.txt", .{});
-    defer file.close();
+    const file = @embedFile("input.txt");
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -30,14 +29,11 @@ pub fn main() !void {
     var point_set = std.AutoHashMap(Point, void).init(allocator);
     defer point_set.deinit();
 
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const reader = buf_reader.reader();
-
-    var buf: [2048]u8 = undefined;
-
     var row: usize = 0;
-    while (try reader.readUntilDelimiterOrEof(&buf, '\n')) |line| : (row += 1) {
-        try line_list.append(try allocator.dupe(u8, line));
+
+    var iter = std.mem.tokenizeAny(u8, file, "\n");
+    while (iter.next()) |line| : (row += 1) {
+        try line_list.append(line);
         try parseLine(&point_list, line, row);
     }
 

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input, err := os.Open("../../input.txt")
+	input, err := os.Open("../input.txt")
 	if err != nil {
 		panic(err)
 	}

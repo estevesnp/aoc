@@ -1,23 +1,19 @@
 const std = @import("std");
 
 pub fn main() !void {
-    const file = try std.fs.cwd().openFile("../../input.txt", .{});
-    defer file.close();
+    const file = @embedFile("input.txt");
 
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const reader = buf_reader.reader();
-
-    var buff: [1024]u8 = undefined;
     var count: u64 = 0;
 
-    while (try reader.readUntilDelimiterOrEof(&buff, '\n')) |line| {
+    var iter = std.mem.tokenizeAny(u8, file, "\n");
+    while (iter.next()) |line| {
         count += getNums(line);
     }
 
     std.debug.print("RESULT: {}\n", .{count});
 }
 
-fn getNums(line: []u8) u8 {
+fn getNums(line: []const u8) u8 {
     var first_digit: ?u8 = null;
     var second_digit: ?u8 = null;
 

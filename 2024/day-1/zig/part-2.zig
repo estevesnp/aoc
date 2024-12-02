@@ -1,11 +1,7 @@
 const std = @import("std");
 
 pub fn main() !void {
-    const file = try std.fs.cwd().openFile("../../input.txt", .{});
-    defer file.close();
-
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const reader = buf_reader.reader();
+    const file = @embedFile("input.txt");
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -15,8 +11,8 @@ pub fn main() !void {
     var map = std.AutoHashMap(u32, u32).init(allocator);
     var right_list = std.ArrayList(u32).init(allocator);
 
-    var buf: [1024]u8 = undefined;
-    while (try reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+    var iter = std.mem.tokenizeAny(u8, file, "\n");
+    while (iter.next()) |line| {
         try parseLine(line, &map, &right_list);
     }
 

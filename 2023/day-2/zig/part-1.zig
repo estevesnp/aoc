@@ -17,16 +17,12 @@ const Colors = enum {
 };
 
 pub fn main() !void {
-    const file = try std.fs.cwd().openFile("../../input.txt", .{});
-    defer file.close();
-
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const reader = buf_reader.reader();
+    const file = @embedFile("input.txt");
 
     var count: u32 = 0;
-    var buf: [1024]u8 = undefined;
 
-    while (try reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+    var iter = std.mem.tokenizeAny(u8, file, "\n");
+    while (iter.next()) |line| {
         if (parseLine(line)) |id| count += id;
     }
 
