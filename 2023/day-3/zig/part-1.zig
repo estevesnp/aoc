@@ -1,116 +1,78 @@
 const std = @import("std");
+const isDigit = std.ascii.isDigit;
 
-const Point = struct {
-    col: usize,
-    row: usize,
+const Point = struct { col: usize, row: usize };
 
-    fn derive(self: Point, col: i32, row: i32) Point {
-        return .{
-            .col = @abs(col + @as(i32, @intCast(self.col))),
-            .row = @abs(row + @as(i32, @intCast(self.row))),
-        };
-    }
+const directions = [_][2]i32{
+    [_]i32{ 1, 0 },
+    [_]i32{ 0, 1 },
+    [_]i32{ -1, 0 },
+    [_]i32{ 0, -1 },
+    [_]i32{ 1, 1 },
+    [_]i32{ 1, -1 },
+    [_]i32{ -1, 1 },
+    [_]i32{ -1, -1 },
 };
-const NumPoint = struct { val: u32, point: Point };
 
 pub fn main() !void {
     const file = @embedFile("input.txt");
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    _ = gpa.detectLeaks();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
-    var line_list = std.ArrayList([]const u8).init(allocator);
-    defer line_list.deinit();
-
-    var point_list = std.ArrayList(Point).init(allocator);
-    defer point_list.deinit();
-
-    var point_set = std.AutoHashMap(Point, void).init(allocator);
-    defer point_set.deinit();
-
-    var row: usize = 0;
+    var matrix = std.ArrayList([]const u8).init(allocator);
 
     var iter = std.mem.tokenizeAny(u8, file, "\n");
-    while (iter.next()) |line| : (row += 1) {
-        try line_list.append(line);
-        try parseLine(&point_list, line, row);
+    while (iter.next()) |line| {
+        try matrix.append(line);
     }
 
-    var num_points: [8]?NumPoint = undefined;
+    const result = getResult(&matrix);
 
-    var count: u64 = 0;
-    for (point_list.items) |point| {
-        num_points = .{null} ** 8;
-        try parsePoint(&num_points, point, line_list.items);
-
-        for (num_points) |num_point| {
-            if (num_point == null) continue;
-            const get_put = try point_set.getOrPut(num_point.?.point);
-            if (get_put.found_existing) continue;
-            count += num_point.?.val;
-        }
-    }
-
-    std.debug.print("RESULT: {}\n", .{count});
+    std.debug.print("RESULT: {}\n", .{result});
 }
 
-fn parseLine(point_list: *std.ArrayList(Point), line: []const u8, row: usize) !void {
-    for (line, 0..) |char, col| {
-        if (char == '.' or std.ascii.isDigit(char)) continue;
-        try point_list.append(Point{ .col = col, .row = row });
-    }
-}
+fn getResult(matrix: *std.ArrayList([]const u8)) u32 {
+    var count: u32 = 0;
+    const cols = matrix.items[0].len;
 
-fn parsePoint(num_points: *[8]?NumPoint, point: Point, lines: [][]const u8) !void {
-    var count: usize = 0;
+    for (matrix.items, 0..) |line, row| {
+        var isValid = false;
+        var num: u32 = 0;
 
-    const cols = lines[0].len - 1;
-    const rows = lines.len - 1;
-
-    var rel_cols = [_]?i8{ null, 0, null };
-    var rel_rows = [_]?i8{ null, 0, null };
-
-    if (point.col > 0) rel_cols[0] = -1;
-    if (point.col < cols) rel_cols[2] = 1;
-
-    if (point.row > 0) rel_rows[0] = -1;
-    if (point.row < rows) rel_rows[2] = 1;
-
-    for (rel_rows) |rel_row| {
-        if (rel_row == null) continue;
-        for (rel_cols) |rel_col| {
-            if (rel_col == null) continue;
-
-            if (rel_row.? == 0 and rel_col.? == 0) {
-                continue;
+        for (line, 0..) |char, col| {
+            if (isDigit(char)) {
+                num = num * 10 + char - '0';
+                isValid = isValid or isAdjacent(matrix, row, col);
+            } else {
+                num = 0;
+                isValid = false;
             }
 
-            const to_check = point.derive(rel_col.?, rel_row.?);
-            if (try checkNum(to_check, lines[to_check.row])) |num_point| {
-                num_points[count] = num_point;
-                count += 1;
+            if (isValid and (col + 1 == cols or !isDigit(line[col + 1]))) {
+                count += num;
             }
         }
     }
+
+    return count;
 }
 
-fn checkNum(point: Point, line: []const u8) !?NumPoint {
-    if (!std.ascii.isDigit(line[point.col])) return null;
+fn isAdjacent(matrix: *std.ArrayList([]const u8), row: usize, col: usize) bool {
+    const rows = matrix.items.len;
+    const cols = matrix.items[0].len;
+    for (directions) |dir| {
+        const rel_row = @as(i32, @intCast(row)) - dir[0];
+        const rel_col = @as(i32, @intCast(col)) - dir[1];
 
-    var start: usize = point.col;
-    var end: usize = point.col;
+        if (rel_row < 0 or rel_row >= rows or rel_col < 0 or rel_col >= cols) continue;
+        if (isSymbol(matrix.items[@as(usize, @intCast(rel_row))][@as(usize, @intCast(rel_col))])) return true;
+    }
 
-    while (start > 0 and std.ascii.isDigit(line[start - 1])) start -= 1;
-    while (end < line.len - 1 and std.ascii.isDigit(line[end + 1])) end += 1;
+    return false;
+}
 
-    const num = try std.fmt.parseInt(u32, line[start .. end + 1], 10);
-
-    return .{
-        .val = num,
-        .point = .{
-            .col = start,
-            .row = point.row,
-        },
-    };
+fn isSymbol(ch: u8) bool {
+    return ch != '.' and !isDigit(ch);
 }
