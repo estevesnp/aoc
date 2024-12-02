@@ -67,7 +67,8 @@ fn checkGear(matrix: [][]const u8, gear: Point) ?u32 {
         const rel_col_idx: usize = @intCast(rel_col);
 
         if (isDigit(matrix[rel_row_idx][rel_col_idx])) {
-            const num_point = extractNumber(matrix[rel_row_idx], .{ .col = rel_col_idx, .row = rel_row_idx });
+            const p = Point{ .col = rel_col_idx, .row = rel_row_idx };
+            const num_point = extractNumber(matrix[rel_row_idx], p);
             for (num_points, 0..) |np, idx| {
                 if (np == null) {
                     num_points[idx] = num_point;
