@@ -1,22 +1,23 @@
 const std = @import("std");
+const mem = std.mem;
 const math = std.math;
 
 pub fn main() !void {
     const file = @embedFile("input.txt");
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
 
-    var nums = std.ArrayList(u32).init(allocator);
+    var nums = std.ArrayList(u32).init(arena.allocator());
     defer nums.deinit();
 
     var count: u32 = 0;
 
-    var iter = std.mem.tokenizeAny(u8, file, "\n");
+    var iter = mem.tokenizeScalar(u8, file, '\n');
     while (iter.next()) |line| {
         nums.clearRetainingCapacity();
 
-        var num_iter = std.mem.tokenizeAny(u8, line, " ");
+        var num_iter = mem.tokenizeScalar(u8, line, ' ');
         while (num_iter.next()) |num_str| {
             const num = try std.fmt.parseInt(u32, num_str, 10);
             try nums.append(num);

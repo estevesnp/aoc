@@ -1,5 +1,7 @@
 const std = @import("std");
-const List = std.ArrayList(u32);
+const mem = std.mem;
+const parseInt = std.fmt.parseInt;
+const ArrayList = std.ArrayList;
 
 pub fn main() !void {
     const file = @embedFile("input.txt");
@@ -9,10 +11,10 @@ pub fn main() !void {
 
     const allocator = arena.allocator();
 
-    var left_list = List.init(allocator);
-    var right_list = List.init(allocator);
+    var left_list = ArrayList(u32).init(allocator);
+    var right_list = ArrayList(u32).init(allocator);
 
-    var iter = std.mem.tokenizeAny(u8, file, "\n");
+    var iter = mem.tokenizeScalar(u8, file, '\n');
     while (iter.next()) |line| {
         try parseLine(line, &left_list, &right_list);
     }
@@ -28,14 +30,18 @@ pub fn main() !void {
     std.debug.print("RESULT: {}\n", .{sum});
 }
 
-fn parseLine(line: []const u8, left_list: *List, right_list: *List) !void {
-    var iter = std.mem.tokenizeAny(u8, line, " ");
+fn parseLine(
+    line: []const u8,
+    left_list: *ArrayList(u32),
+    right_list: *ArrayList(u32),
+) !void {
+    var iter = mem.tokenizeScalar(u8, line, ' ');
 
     const left = iter.next() orelse @panic("no left found");
     const right = iter.next() orelse @panic("no right found");
 
-    const left_num = std.fmt.parseInt(u32, left, 10) catch @panic("couldnt parse left");
-    const right_num = std.fmt.parseInt(u32, right, 10) catch @panic("couldnt parse right");
+    const left_num = parseInt(u32, left, 10) catch @panic("couldnt parse left");
+    const right_num = parseInt(u32, right, 10) catch @panic("couldnt parse right");
 
     try left_list.append(left_num);
     try right_list.append(right_num);

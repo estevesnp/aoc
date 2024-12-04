@@ -1,4 +1,5 @@
 const std = @import("std");
+const mem = std.mem;
 const math = std.math;
 
 pub fn main() !void {
@@ -6,7 +7,7 @@ pub fn main() !void {
 
     var count: u32 = 0;
 
-    var iter = std.mem.tokenizeAny(u8, file, "\n");
+    var iter = mem.tokenizeScalar(u8, file, '\n');
     while (iter.next()) |line| {
         if (isSafeReport(line)) count += 1;
     }
@@ -15,7 +16,7 @@ pub fn main() !void {
 }
 
 fn isSafeReport(report: []const u8) bool {
-    var iter = std.mem.tokenizeAny(u8, report, " ");
+    var iter = mem.tokenizeScalar(u8, report, ' ');
 
     var cur_num: ?u32 = null;
     var cur_order: ?math.Order = null;
