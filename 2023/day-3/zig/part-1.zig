@@ -19,9 +19,9 @@ pub fn main() !void {
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
-    const allocator = arena.allocator();
 
-    var matrix = std.ArrayList([]const u8).init(allocator);
+    var matrix = std.ArrayList([]const u8).init(arena.allocator());
+    defer matrix.deinit();
 
     var iter = std.mem.tokenizeAny(u8, file, "\n");
     while (iter.next()) |line| {

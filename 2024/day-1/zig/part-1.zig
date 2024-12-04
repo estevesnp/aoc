@@ -12,7 +12,10 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     var left_list = ArrayList(u32).init(allocator);
+    defer left_list.deinit();
+
     var right_list = ArrayList(u32).init(allocator);
+    defer right_list.deinit();
 
     var iter = mem.tokenizeScalar(u8, file, '\n');
     while (iter.next()) |line| {

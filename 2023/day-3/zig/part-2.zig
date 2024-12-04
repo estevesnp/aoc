@@ -23,7 +23,10 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     var matrix = std.ArrayList([]const u8).init(allocator);
+    defer matrix.deinit();
+
     var gear_list = std.ArrayList(Point).init(allocator);
+    defer gear_list.deinit();
 
     var iter = std.mem.tokenizeAny(u8, file, "\n");
     var row: usize = 0;
