@@ -66,7 +66,10 @@ pub fn main() !void {
         if (findGuard(line, row)) |g| guard = g;
     }
 
-    std.debug.print("RESULT: {}\n", .{try countSteps(&guard, matrix.items, allocator)});
+    std.debug.print(
+        "RESULT: {}\n",
+        .{try countSteps(&guard, matrix.items, allocator)},
+    );
 }
 
 fn findGuard(line: []const u8, row: usize) ?Guard {

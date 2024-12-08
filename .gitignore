@@ -1,1 +1,3 @@
 *.txt
+build.zig
+.zig-cache
